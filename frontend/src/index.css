@@ -1,0 +1,236 @@
+/* ============================================================
+   SCRAPPLE — Dashboard HUD Styles
+   ============================================================ */
+
+/* --- Reset & Base ------------------------------------------ */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #06080d;
+  --cyan: #00e5ff;
+  --cyan-dim: rgba(0, 229, 255, .25);
+  --cyan-glow: rgba(0, 229, 255, .55);
+  --text: rgba(255, 255, 255, .72);
+  --text-dim: rgba(255, 255, 255, .30);
+  --green: #39ff14;
+  --font-display: 'Orbitron', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+
+html,
+body,
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Canvas ----------------------------------------------- */
+.grid-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* --- Camera Feed Rectangle -------------------------------- */
+.camera-feed {
+  position: fixed;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 66.66vw;
+  height: 66.66vh;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 12, 24, .35);
+  border: 1.5px solid var(--cyan-dim);
+  box-shadow:
+    0 0 8px var(--cyan-dim),
+    0 0 24px var(--cyan-dim),
+    0 0 60px rgba(0, 229, 255, .12),
+    inset 0 0 30px rgba(0, 229, 255, .06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Scanlines */
+.camera-feed::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 229, 255, 0.015) 2px,
+      rgba(0, 229, 255, 0.015) 4px);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Corner brackets */
+.camera-feed__corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: var(--cyan);
+  border-style: solid;
+  border-width: 0;
+}
+
+.camera-feed__corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 3px;
+  border-left-width: 3px;
+}
+
+.camera-feed__corner--tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 3px;
+  border-right-width: 3px;
+}
+
+.camera-feed__corner--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 3px;
+  border-left-width: 3px;
+}
+
+.camera-feed__corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 3px;
+  border-right-width: 3px;
+}
+
+/* Crosshair */
+.camera-feed__crosshair {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--cyan-dim);
+  border-radius: 50%;
+  position: relative;
+}
+
+.camera-feed__crosshair::before,
+.camera-feed__crosshair::after {
+  content: '';
+  position: absolute;
+  background: var(--cyan-dim);
+}
+
+.camera-feed__crosshair::before {
+  width: 1px;
+  height: 64px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.camera-feed__crosshair::after {
+  width: 64px;
+  height: 1px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Labels */
+.camera-feed__label {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--cyan);
+  text-shadow: 0 0 6px var(--cyan-glow);
+  opacity: .8;
+}
+
+.camera-feed__label--top {
+  top: 12px;
+}
+
+.camera-feed__label--bottom {
+  bottom: 12px;
+  animation: blink 1.6s steps(1) infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: .8;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+/* --- HUD Header ------------------------------------------- */
+.hud-header {
+  position: fixed;
+  z-index: 2;
+  top: 18px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hud-header__title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: 8px;
+  color: var(--cyan);
+  text-shadow:
+    0 0 6px var(--cyan-glow),
+    0 0 20px rgba(0, 229, 255, .25);
+}
+
+.hud-header__subtitle {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+}
+
+/* --- HUD Footer ------------------------------------------- */
+.hud-footer {
+  position: fixed;
+  z-index: 2;
+  bottom: 16px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  gap: 32px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+}
+
+.hud-footer__value {
+  color: var(--cyan);
+  text-shadow: 0 0 4px var(--cyan-dim);
+}
+
+.hud-footer__value--green {
+  color: var(--green);
+  text-shadow: 0 0 4px rgba(57, 255, 20, .35);
+}
