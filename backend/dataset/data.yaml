@@ -1,0 +1,9 @@
+path: ./dataset
+train: train
+val: test
+
+names:
+  0: dice
+  1: gunman
+  2: house
+  3: soldier
