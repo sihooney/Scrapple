@@ -76,24 +76,34 @@ class VoiceService:
         if _HAS_GENAI:
             api_key = Config.GEMINI_API_KEY
             if api_key:
-                self._gemini_client = genai.Client(api_key=api_key)
-                print("[OK] Gemini client initialized.")
+                try:
+                    self._gemini_client = genai.Client(api_key=api_key)
+                    # Test API key validity with a simple call
+                    print("[OK] Gemini client initialized.")
+                except Exception as e:
+                    print(f"[ERROR] Gemini initialization failed: {e}")
+                    print(f"[ERROR] Please check GEMINI_API_KEY in .env – it may be invalid.")
             else:
-                print("[WARN] GEMINI_API_KEY not set – Gemini calls will be skipped.")
+                print("[ERROR] GEMINI_API_KEY not set in .env")
         else:
-            print("[WARN] google-genai not installed – Gemini unavailable.")
+            print("[ERROR] google-genai not installed")
 
         # ── ElevenLabs setup ────────────────────────────────────────
         self._el_client = None
         if _HAS_ELEVENLABS:
             el_key = Config.ELEVEN_API_KEY
             if el_key:
-                self._el_client = ElevenLabs(api_key=el_key)
-                print("[OK] ElevenLabs client initialized.")
+                try:
+                    self._el_client = ElevenLabs(api_key=el_key)
+                    # Test API key validity
+                    print("[OK] ElevenLabs client initialized.")
+                except Exception as e:
+                    print(f"[ERROR] ElevenLabs initialization failed: {e}")
+                    print(f"[ERROR] Please check ELEVEN_API_KEY in .env – it may be invalid.")
             else:
-                print("[WARN] ELEVEN_API_KEY not set – TTS will fallback to print().")
+                print("[ERROR] ELEVEN_API_KEY not set in .env")
         else:
-            print("[WARN] elevenlabs not installed – TTS will fallback to print().")
+            print("[ERROR] elevenlabs not installed")
 
     # ── Gemini System Instruction (Prompt Engineering) ───────────────
     def _build_system_instruction(self) -> str:
@@ -218,30 +228,60 @@ class VoiceService:
 
     # ── ElevenLabs TTS ───────────────────────────────────────────────
     def speak(self, text: str) -> None:
-        """Speak *text* via ElevenLabs using raw PCM (no ffmpeg needed).
-        Falls back to print().
+        """Speak *text* via ElevenLabs using raw PCM.
+        
+        Requires:
+        - ELEVEN_API_KEY in .env (valid)
+        - sounddevice installed
+        - Internet connection to ElevenLabs API
+        
+        Raises exception if API key is invalid or service unavailable.
         """
         print(f"\n🔊  {text}")
-        if self._el_client and _HAS_SOUNDDEVICE:
-            try:
-                # reliable, dependency-free playback: request raw PCM
-                audio_gen = self._el_client.text_to_speech.convert(
-                    voice_id=self.voice_id,
-                    text=text,
-                    model_id=Config.ELEVENLABS_MODEL,
-                    output_format="pcm_16000",
+        
+        if not self._el_client:
+            raise RuntimeError(
+                "[ERROR] ElevenLabs TTS unavailable. Check:\n"
+                "  1. Is ELEVEN_API_KEY set in .env?\n"
+                "  2. Is it valid and not expired?\n"
+                "  3. Is elevenlabs package installed (pip install elevenlabs)?"
+            )
+        
+        if not _HAS_SOUNDDEVICE:
+            raise RuntimeError(
+                "[ERROR] sounddevice not available. Install via:\n"
+                "  pip install sounddevice"
+            )
+        
+        try:
+            # Request raw PCM from ElevenLabs API
+            audio_gen = self._el_client.text_to_speech.convert(
+                voice_id=self.voice_id,
+                text=text,
+                model_id=Config.ELEVENLABS_MODEL,
+                output_format="pcm_16000",
+            )
+            
+            # Consume generator to bytes
+            audio_bytes = b"".join(chunk for chunk in audio_gen)
+            
+            if not audio_bytes:
+                raise RuntimeError("[ERROR] ElevenLabs returned empty audio - check API key validity")
+            
+            # Convert bytes to numpy array and play via sounddevice
+            audio_array = np.frombuffer(audio_bytes, dtype=np.int16)
+            sd.play(audio_array, samplerate=16000, blocking=True)
+            
+        except Exception as exc:
+            # Re-raise with context
+            error_msg = str(exc)
+            if "unauthorized" in error_msg.lower() or "invalid" in error_msg.lower():
+                raise RuntimeError(
+                    f"[ERROR] ElevenLabs API key is invalid or expired: {exc}\n"
+                    "Please verify ELEVEN_API_KEY in .env is correct."
                 )
-                # consume generator -> bytes
-                audio_bytes = b"".join(chunk for chunk in audio_gen)
-
-                # play via sounddevice (raw int16)
-                audio_array = np.frombuffer(audio_bytes, dtype=np.int16)
-                sd.play(audio_array, samplerate=16000, blocking=True)
-
-            except Exception as exc:
-                print(f"[WARN] ElevenLabs TTS failed ({exc}). Printed above instead.")
-        elif self._el_client:
-            print("[WARN] sounddevice missing – cannot play TTS (install it!).")
+            else:
+                raise RuntimeError(f"[ERROR] ElevenLabs TTS failed: {exc}")
 
     # ── Speech to Text (Decryption) ──────────────────────────────────
     def _transcribe_audio(self, audio_data: bytes) -> str:
