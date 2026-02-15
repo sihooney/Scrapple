@@ -89,7 +89,7 @@ export default function VideoDisplay() {
         ) : (
           <video
             ref={videoRef}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             autoPlay
             muted
             playsInline

@@ -166,11 +166,14 @@ export default function App() {
 
         {/* Right Column: Video Feeds and Terminal */}
         <div className="right-column">
-          {/* CV Video Stream - YOLO Object Detection on test_video.mov */}
-          <CVVideoStream />
+          {/* Video Streams Row - Side by Side */}
+          <div className="video-streams-row">
+            {/* CV Video Stream - YOLO Object Detection on test_video.mov */}
+            <CVVideoStream />
 
-          {/* Independent Webcam Feed - Live browser camera */}
-          <VideoDisplay />
+            {/* Independent Webcam Feed - Live browser camera */}
+            <VideoDisplay />
+          </div>
 
           {/* System Log Terminal */}
           <SystemLog logs={logs} />
