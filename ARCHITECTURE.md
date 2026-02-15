@@ -8,19 +8,19 @@ Scrapple is the front-end and I/O system for the MakeUofT salvage robot demo. It
 
 ## Demo flow
 
-1. User presses **Start** on the website → demo loop begins.
-2. **Voice (TTS):** Backend says: *"Please select what object to choose. I see [heart, hot dog, gear, screw]. What is the salvage target?"*
+1. User presses **RUN ONCE** on the website → single voice command cycle executes.
+2. **Voice (TTS):** Backend says: *"Scanners active. I see [objects]. What is the salvage target?"*
 3. **User speaks** → STT → Gemini validates against the hardcoded list → decision `{ valid, target, reason }`.
 4. **Voice feedback:** Backend speaks acceptance or rejection (TTS).
 5. **LeRobot:** If valid, backend runs command-prompt / control commands for the chosen target (manual entry may be required).
-6. **Loop continues:** prompt again → user speaks → process → LeRobot → repeat until user presses **Stop**.
+6. **Complete:** One cycle finishes, button returns to "RUN ONCE" state.
 7. **Website:** Live terminal log shows prompts, user command, decision, BOT lines (voice feedback), and `LeRobot: pick "X"`.
 
 ---
 
 ## Components
 
-- **Frontend (React + Vite):** Start/Stop buttons, demo loop (calls `POST /api/voice/listen` repeatedly), SystemLog as live terminal, VoiceControl for one-shot mic when demo is not running.
+- **Frontend (React + Vite):** RUN ONCE button (calls `POST /api/voice/listen` once per click), SystemLog as live terminal, VoiceControl for alternative one-shot mic input.
 - **Backend (Flask):** Voice I/O (VoiceService: TTS prompt → listen → STT → Gemini → TTS result), global state (`visible_objects` = hardcoded list, `last_decision`, `demo_running`), LeRobot bridge (placeholder that logs; RL team can add real commands).
 - **Config:** `DEFAULT_VISIBLE_OBJECTS` in `backend/config.py` is the single source for the demo object list. No CV pipeline for the demo.
 

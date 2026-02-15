@@ -74,58 +74,28 @@ export default function App() {
     if (demoRunning) return;
 
     setDemoRunning(true);
-    demoRunningRef.current = true;
-    addLog('system', '▶ Demo started — voice loop active');
+    addLog('system', '▶ Running voice command...');
 
     try {
-      await fetch(`${API_BASE}/api/demo/start`, {
+      const res = await fetch(`${API_BASE}/api/voice/listen`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duration: 4 }),
       });
-    } catch {
-      addLog('system', 'Failed to signal demo start.');
-    }
 
-    while (demoRunningRef.current) {
-      try {
-        const res = await fetch(`${API_BASE}/api/voice/listen`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ duration: 4 }),
-        });
+      const data = await res.json();
+      handleVoiceResult(data);
 
-        const data = await res.json();
-        handleVoiceResult(data);
-
-        if (!res.ok) {
-          addLog('system', `Request failed: ${res.status}`);
-        }
-      } catch (err) {
-        addLog('system', `Connection error: ${err instanceof Error ? err.message : String(err)}`);
+      if (!res.ok) {
+        addLog('system', `Request failed: ${res.status}`);
       }
-
-      if (demoRunningRef.current) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
+    } catch (err) {
+      addLog('system', `Connection error: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     setDemoRunning(false);
+    addLog('system', '■ Command complete');
   }, [demoRunning, addLog, handleVoiceResult]);
-
-  const handleStopDemo = useCallback(async () => {
-    demoRunningRef.current = false;
-    setDemoRunning(false);
-    addLog('system', '■ Demo stopped');
-
-    try {
-      await fetch(`${API_BASE}/api/demo/stop`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } catch {
-      // no-op
-    }
-  }, [addLog]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black flex flex-col">
@@ -175,20 +145,21 @@ export default function App() {
               </h2>
               <button
                 type="button"
-                onClick={demoRunning ? handleStopDemo : handleStartDemo}
+                onClick={handleStartDemo}
+                disabled={demoRunning}
                 className={`w-full py-3 px-4 font-mono font-bold uppercase tracking-widest transition-all ${
                   demoRunning
-                    ? 'bg-red-900/50 border-2 border-red-500 text-red-300 hover:bg-red-900/70'
+                    ? 'bg-gray-700 border-2 border-gray-500 text-gray-400 cursor-not-allowed'
                     : 'bg-emerald-900/50 border-2 border-emerald-500 text-emerald-300 hover:bg-emerald-900/70'
                 }`}
               >
-                {demoRunning ? '■ STOP DEMO' : '▶ START DEMO'}
+                {demoRunning ? '⏳ RUNNING...' : '▶ RUN ONCE'}
               </button>
 
               <p className="text-xs text-cyan-500/70 mt-4 font-mono">
                 {demoRunning
-                  ? 'Loop is running. Listen for the prompt, then speak the target.'
-                  : 'Press start to begin the continuous voice loop.'}
+                  ? 'Processing voice command...'
+                  : 'Press to run a single voice command cycle.'}
               </p>
             </div>
 
