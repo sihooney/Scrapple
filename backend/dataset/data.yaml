@@ -3,7 +3,8 @@ train: train
 val: test
 
 names:
-  0: dice
-  1: gunman
-  2: house
-  3: soldier
+  0: hotdog
+  1: skull
+  2: nut
+  3: gear
+  4: heart

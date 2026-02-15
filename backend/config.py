@@ -17,7 +17,7 @@ class Config:
     # ── Allowed Object Sets ─────────────────────────────────────────────
     # "Visible" objects are now the ONLY objects.
     # Only what is in this list is considered valid for salvage.
-    DEFAULT_VISIBLE_OBJECTS: list[str] = ["heart", "gear", "hot dog", "skull", "nut"]
+    DEFAULT_VISIBLE_OBJECTS: list[str] = ["hotdog", "skull", "nut", "gear", "heart"]
 
     # ── Audio Recording ─────────────────────────────────────────────────
     AUDIO_SAMPLE_RATE: int = 16_000   # 16 kHz – matches Gemini expectations

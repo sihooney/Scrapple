@@ -54,7 +54,8 @@ def index():
         "<li>POST /api/voice/listen</li>"
         "<li>POST /api/demo/start</li><li>POST /api/demo/stop</li>"
         "<li>GET /api/arm/next</li>"
-        "<li>GET /api/video/stream</li>"
+        "<li>GET /api/video/feed — MJPEG stream with YOLO detection</li>"
+        "<li>GET /api/detections — Latest detection positions</li>"
         "</ul>"
     )
 
