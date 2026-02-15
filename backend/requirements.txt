@@ -1,0 +1,13 @@
+flask
+flask-cors
+python-dotenv
+google-genai
+elevenlabs
+# Audio
+pyaudio
+sounddevice
+numpy
+SpeechRecognition
+# Vision
+ultralytics
+opencv-python
