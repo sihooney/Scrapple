@@ -1,28 +1,36 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-import gearIcon from '../icons/gear.png';
-import heartIcon from '../icons/heart.png';
-import hotdogIcon from '../icons/hotdog.png';
-import nutIcon from '../icons/nut.png';
-import skullIcon from '../icons/skull.png';
-
 const ICON_MAP: Record<string, string> = {
-  hotdog: hotdogIcon,
-  skull: skullIcon,
-  nut: nutIcon,
-  gear: gearIcon,
-  heart: heartIcon,
+  hotdog: '🌭',
+  skull: '💀',
+  nut: '🔩',
+  gear: '⚙️',
+  heart: '❤️',
 };
+
+const API_BASE = 'http://localhost:5000';
 
 interface Detection {
   label: string;
-  cx: number; // 0-1 normalized
+  cx: number;
   cy: number;
   radius: number;
   confidence: number;
 }
 
-export default function CVVideoStream() {
+interface CVVideoStreamProps {
+  streamUrl: string;
+  label: string;
+  showDetections?: boolean;
+  onPickTarget?: (target: string) => void;
+}
+
+export default function CVVideoStream({ 
+  streamUrl, 
+  label, 
+  showDetections = false,
+  onPickTarget 
+}: CVVideoStreamProps) {
   const [hasSignal, setHasSignal] = useState(false);
   const [detections, setDetections] = useState<Detection[]>([]);
   const [hovered, setHovered] = useState<number | null>(null);
@@ -30,7 +38,6 @@ export default function CVVideoStream() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imgRect, setImgRect] = useState({ x: 0, y: 0, w: 0, h: 0 });
 
-  // Calculate the actual rendered area of the <img> (accounting for object-fit: contain)
   const updateImgRect = useCallback(() => {
     const img = imgRef.current;
     const container = containerRef.current;
@@ -42,7 +49,6 @@ export default function CVVideoStream() {
     const nw = img.naturalWidth;
     const nh = img.naturalHeight;
 
-    // object-fit: contain math
     const scale = Math.min(cw / nw, ch / nh);
     const renderedW = nw * scale;
     const renderedH = nh * scale;
@@ -52,30 +58,40 @@ export default function CVVideoStream() {
     setImgRect({ x: offsetX, y: offsetY, w: renderedW, h: renderedH });
   }, []);
 
-  // Poll detections from backend
+  // Poll detections (only if showDetections is true)
   useEffect(() => {
-    const interval = setInterval(async () => {
+    if (!showDetections) return;
+    
+    let isMounted = true;
+    
+    const pollDetections = async () => {
+      if (!isMounted) return;
       try {
-        const res = await fetch('http://localhost:5000/api/detections');
-        if (res.ok) {
+        const res = await fetch(`${API_BASE}/api/detections`);
+        if (res.ok && isMounted) {
           const data: Detection[] = await res.json();
           setDetections(data);
         }
       } catch {
-        // backend not ready yet
+        // backend not ready
       }
-    }, 200);
-    return () => clearInterval(interval);
-  }, []);
+    };
+    
+    const interval = setInterval(pollDetections, 500);
+    pollDetections();
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [showDetections]);
 
-  // Update image rect on resize
   useEffect(() => {
     updateImgRect();
     window.addEventListener('resize', updateImgRect);
     return () => window.removeEventListener('resize', updateImgRect);
   }, [updateImgRect]);
 
-  // Map normalized detection to pixel position within the container
   const toPixel = (det: Detection) => {
     const px = imgRect.x + det.cx * imgRect.w;
     const py = imgRect.y + det.cy * imgRect.h;
@@ -91,15 +107,14 @@ export default function CVVideoStream() {
       <div className="cv-video-stream__corner cv-video-stream__corner--br" />
 
       <span className="cv-video-stream__label cv-video-stream__label--top">
-        LIVE FEED — ARM CAM 01
+        [{label}] {showDetections ? 'YOLO' : 'RAW'}
       </span>
 
-      {/* MJPEG stream from Flask backend */}
       <img
         ref={imgRef}
         className="cv-video-stream__stream"
-        src="http://localhost:5000/api/video/feed"
-        alt="Live detection feed"
+        src={streamUrl}
+        alt={`${label} feed`}
         onLoad={() => {
           setHasSignal(true);
           updateImgRect();
@@ -107,8 +122,8 @@ export default function CVVideoStream() {
         onError={() => setHasSignal(false)}
       />
 
-      {/* Detection hit zones + hover cards */}
-      {hasSignal &&
+      {/* Detection overlays (only for YOLO stream) */}
+      {showDetections && hasSignal &&
         detections.map((det, i) => {
           const { px, py, pr } = toPixel(det);
           const isHovered = hovered === i;
@@ -129,27 +144,40 @@ export default function CVVideoStream() {
             >
               {isHovered && (
                 <div className="detection-card">
-                  <img
-                    className="detection-card__icon"
-                    src={ICON_MAP[det.label] || ''}
-                    alt={det.label}
-                  />
+                  <span className="detection-card__icon-emoji">
+                    {ICON_MAP[det.label] || '📦'}
+                  </span>
                   <span className="detection-card__label">{det.label.toUpperCase()}</span>
                   <span className="detection-card__conf">
-                    {(det.confidence * 100).toFixed(0)}% MATCH
+                    {(det.confidence * 100).toFixed(0)}%
                   </span>
-                  <button className="detection-card__btn">PICK UP</button>
+                  <button 
+                    className="detection-card__btn"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        await fetch(`${API_BASE}/api/lerobot/run`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                        });
+                        onPickTarget?.(det.label);
+                      } catch (err) {
+                        console.error('[CV] Failed to trigger LeRobot:', err);
+                      }
+                    }}
+                  >
+                    [ACQUIRE]
+                  </button>
                 </div>
               )}
             </div>
           );
         })}
 
-      {/* Crosshair overlay */}
       {hasSignal && <div className="cv-video-stream__crosshair cv-video-stream__crosshair--overlay" />}
 
       <span className="cv-video-stream__label cv-video-stream__label--bottom">
-        {hasSignal ? 'DETECTING' : 'NO SIGNAL'}
+        {hasSignal ? 'ACTIVE' : 'NO_SIGNAL'}
       </span>
     </div>
   );

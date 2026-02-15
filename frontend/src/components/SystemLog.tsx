@@ -1,8 +1,7 @@
 /**
  * Scrapple — System Log Component
  * ================================
- * Live terminal-style log display.
- * New logs appear at the TOP (reversed order).
+ * Apocalyptic terminal log display.
  */
 
 import { useEffect, useRef } from 'react';
@@ -21,55 +20,65 @@ interface SystemLogProps {
 export default function SystemLog({ logs }: SystemLogProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to top on new logs
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
     }
   }, [logs]);
 
-  // Reverse logs so newest appears first
   const reversedLogs = [...logs].reverse();
 
+  const getPrefix = (type: string) => {
+    switch (type) {
+      case 'user': return '[USR]';
+      case 'bot': return '[BOT]';
+      default: return '[SYS]';
+    }
+  };
+
+  const getColor = (type: string) => {
+    switch (type) {
+      case 'user': return 'text-[#00ff41]';
+      case 'bot': return 'text-[#00ffff]';
+      default: return 'text-[#ffaa00]';
+    }
+  };
+
   return (
-    <div className="bg-gray-950 border-2 border-cyan-500/40 rounded-lg overflow-hidden flex flex-col h-full glow-cyan">
-      <div className="bg-gray-900 border-b border-cyan-500/40 px-4 py-3 flex items-center justify-between">
-        <span className="text-cyan-400 font-mono font-bold uppercase tracking-wider text-sm">
-          Terminal
+    <div className="system-log flex-1 min-h-0">
+      {/* Header */}
+      <div className="bg-[var(--bg-dark)] border-b border-[var(--green-dim)] px-3 py-2 flex items-center justify-between">
+        <span className="text-[var(--green)] font-mono text-[11px] font-bold tracking-widest uppercase">
+          &gt; SYSTEM_LOG
         </span>
-        <div className="flex gap-2" aria-hidden="true">
-          <div className="w-3 h-3 rounded-full bg-red-500 shadow-lg shadow-red-500/50" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-lg shadow-yellow-500/50" />
-          <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
-        </div>
+        <span className="text-[9px] text-[var(--text-dead)] tracking-wider">
+          [{reversedLogs.length} ENTRIES]
+        </span>
       </div>
 
+      {/* Log Content */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto scrollbar-hide space-y-1 p-4 font-mono text-xs"
+        className="flex-1 overflow-y-auto p-3 font-mono text-[10px] space-y-1"
+        style={{ maxHeight: 'calc(100% - 40px)' }}
       >
         {logs.length === 0 && (
-          <div className="text-cyan-600/50">
-            -- Awaiting commands --
+          <div className="text-[var(--text-dead)]">
+            &gt; AWAITING_INPUT...<span className="cursor-blink"></span>
           </div>
         )}
 
         {reversedLogs.map((log) => (
-          <div key={log.id} className="flex gap-3 min-h-fit">
-            <span className="text-cyan-600 flex-shrink-0">
+          <div key={log.id} className="flex gap-2 leading-relaxed">
+            <span className="text-[var(--text-dead)] flex-shrink-0 opacity-50">
               {log.timestamp}
             </span>
-            <div
-              className={`flex-1 ${
-                log.type === 'user'
-                  ? 'text-emerald-400'
-                  : log.type === 'bot'
-                  ? 'text-cyan-400'
-                  : 'text-yellow-300'
-              }`}
-            >
+            <span className={`flex-shrink-0 ${getColor(log.type)}`}>
+              {getPrefix(log.type)}
+            </span>
+            <span className={getColor(log.type)}>
               {log.text}
-            </div>
+            </span>
           </div>
         ))}
       </div>

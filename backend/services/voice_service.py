@@ -112,9 +112,8 @@ class VoiceService:
 
         return (
             "You are the **Wasteland Salvage Assistant**, the cognitive core of an "
-            "autonomous salvage robot operating in a post-apocalyptic dumpster "
-            "environment.  Your job is to interpret a human operator's spoken "
-            "command and decide whether the requested salvage target is VALID.\n"
+            "autonomous salvage robot. Your job is to interpret a human operator's "
+            "spoken command and extract the target object they want to grab.\n"
             "\n"
             "## RULES (follow these EXACTLY)\n"
             "\n"
@@ -122,26 +121,28 @@ class VoiceService:
             "   - A text transcription of the operator's voice command.\n"
             "   - A VISIBLE_OBJECTS list: objects the robot's cameras currently see.\n"
             "\n"
-            "2. A target is VALID **only if** it appears in the VISIBLE_OBJECTS list.\n"
-            "   All comparisons are case-insensitive.\n"
+            "2. BE LENIENT - Accept ANY command that expresses intent to grab/pick something:\n"
+            "   - 'pick the nut', 'grab skull', 'get the gear', 'take heart' = VALID\n"
+            "   - 'I want the hotdog', 'give me the skull', 'that one' = VALID (pick any visible)\n"
+            "   - Even partial matches: 'pick it', 'grab that' = VALID (pick first visible object)\n"
             "\n"
-            "3. A target is INVALID if:\n"
-            "   - It is NOT in the VISIBLE_OBJECTS list (you cannot see it/not valid), OR\n"
-            "   - The text is empty, nonsense, or unintelligible, OR\n"
-            "   - The operator does not name any specific object.\n"
+            "3. A target is INVALID ONLY if:\n"
+            "   - The text is completely empty or unintelligible nonsense, OR\n"
+            "   - The operator explicitly says 'no', 'stop', 'cancel', 'nevermind'\n"
             "\n"
-            "4. OUTPUT FORMAT — respond with **raw JSON only**.  No markdown fencing,\n"
-            "   no explanation, no extra text.  The JSON schema is:\n"
+            "4. If the operator names an object not in VISIBLE_OBJECTS but expresses grab intent,\n"
+            "   pick the FIRST object from VISIBLE_OBJECTS instead and set valid=true.\n"
+            "\n"
+            "5. OUTPUT FORMAT — respond with **raw JSON only**. No markdown, no extra text:\n"
             "\n"
             '   {"valid": <bool>, "target": "<string or null>", "reason": "<string>"}\n'
             "\n"
-            "   - If valid is true:  target = the matched object name (lowercase),\n"
-            '     reason = a short confirmation (e.g. "Target acquired: heart").\n'
-            "   - If valid is false: target = null,\n"
-            "     reason = a concise, thematic rejection explaining WHY\n"
-            '     (e.g. "Object not in scanner range" or "Target unknown").\n'
+            "   - If valid is true: target = object name (lowercase from VISIBLE_OBJECTS)\n"
+            '     reason = short confirmation (e.g. "Target acquired: heart")\n'
+            "   - If valid is false: target = null\n"
+            '     reason = why (e.g. "No grab intent detected")\n'
             "\n"
-            "5. Always respond in character as a terse, professional salvage unit.\n"
+            "6. Be helpful - when in doubt, say YES and pick a visible target.\n"
         )
 
     # ── Audio Recording ──────────────────────────────────────────────
@@ -291,14 +292,28 @@ class VoiceService:
         # Google Web Speech (Free, via SpeechRecognition)
         try:
             recognizer = sr.Recognizer()
+            
+            # Adjust energy threshold for better detection
+            recognizer.energy_threshold = 300  # Lower = more sensitive
+            recognizer.dynamic_energy_threshold = True
+            recognizer.pause_threshold = 0.8  # Seconds of silence to consider phrase complete
+            
             with sr.AudioFile(io.BytesIO(audio_data)) as source:
+                # Adjust for ambient noise briefly
+                recognizer.adjust_for_ambient_noise(source, duration=0.2)
                 audio = recognizer.record(source)
 
-            text = recognizer.recognize_google(audio)
+            # Try Google Web Speech with language hint
+            text = recognizer.recognize_google(audio, language="en-US")
             print(f"✅  Decryption (Google): \"{text}\"")
             return text
         except sr.UnknownValueError:
             print("❌  Decryption failed: Audio unintelligible.")
+            print("   TIP: Speak clearly and say a valid target like 'pick the nut' or 'grab the skull'")
+            return ""
+        except sr.RequestError as e:
+            print(f"[ERROR] Google Speech API error: {e}")
+            print("   Check internet connection or try again.")
             return ""
         except Exception as e:
             print(f"[WARN] STT failed: {e}")

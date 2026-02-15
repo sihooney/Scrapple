@@ -1,8 +1,9 @@
 """
 Video Stream Endpoint Handler
 ==============================
-GET /api/video/feed — Returns MJPEG stream with YOLO object detection
-GET /api/detections — Returns latest detection positions as JSON
+GET /api/video/feed     — MJPEG stream with YOLO detection (camera 2 - front)
+GET /api/video/handeye  — MJPEG stream raw feed (camera 3 - handeye)
+GET /api/detections     — Latest detection positions as JSON
 """
 
 from flask import Response, jsonify
@@ -10,41 +11,25 @@ from services.cv_video_service import cv_video_service
 
 
 def register_video_routes(app):
-    """Register video streaming endpoint routes.
-    
-    Parameters
-    ----------
-    app : Flask
-        Flask application instance.
-    """
+    """Register video streaming endpoint routes."""
 
     @app.route('/api/video/feed', methods=['GET'])
     def video_feed():
-        """Stream processed video as MJPEG with neon detection overlays.
-        
-        Returns multipart JPEG stream (MJPEG) with real-time YOLO object detection.
-        Video loops continuously with neon circle effects on detected objects.
-        
-        Returns
-        -------
-        Response
-            Flask Response with multipart JPEG stream.
-        """
+        """Stream front camera (index 2) as MJPEG with YOLO detection overlays."""
         return Response(
             cv_video_service.generate_stream(),
             mimetype='multipart/x-mixed-replace; boundary=frame'
         )
 
+    @app.route('/api/video/handeye', methods=['GET'])
+    def video_handeye():
+        """Stream handeye camera (index 3) as raw MJPEG feed."""
+        return Response(
+            cv_video_service.generate_stream_handeye(),
+            mimetype='multipart/x-mixed-replace; boundary=frame'
+        )
+
     @app.route('/api/detections', methods=['GET'])
     def detections():
-        """Return the latest detection positions as JSON.
-        
-        Provides normalized coordinates (0-1) for detected objects,
-        used by frontend for hover card positioning.
-        
-        Returns
-        -------
-        JSON
-            List of detections with label, position, radius, and confidence.
-        """
+        """Return the latest detection positions as JSON."""
         return jsonify(cv_video_service.get_detections())

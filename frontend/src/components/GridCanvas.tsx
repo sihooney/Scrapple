@@ -14,18 +14,19 @@ import { useEffect, useRef } from 'react';
  * - z-index: 0 (background layer)
  */
 
-/* ── Tunables ──────────────────────────────────────────────── */
-const GRID_BASE_SPACING = 40;
+/* ── Tunables (OPTIMIZED for performance) ─────────────────── */
+const GRID_BASE_SPACING = 60;  // Larger spacing = fewer lines
 const GRID_JITTER = 8;
-const GRID_LINE_COLOR = 'rgba(0, 229, 255, 0.06)';
-const BEAM_COLOR_CORE = 'rgba(0, 229, 255, 0.9)';
-const BEAM_COLOR_GLOW = 'rgba(0, 229, 255, 0.25)';
-const BEAM_TRAIL_MIN = 60;
-const BEAM_TRAIL_MAX = 180;
-const BEAM_SPEED_MIN = 2.5;
-const BEAM_SPEED_MAX = 5.5;
-const BEAM_SPAWN_RATE = 0.12;
-const MAX_BEAMS = 120;
+const GRID_LINE_COLOR = 'rgba(0, 255, 65, 0.04)';  // Match new theme
+const BEAM_COLOR_CORE = 'rgba(0, 255, 65, 0.7)';
+const BEAM_COLOR_GLOW = 'rgba(0, 255, 65, 0.15)';
+const BEAM_TRAIL_MIN = 40;  // Shorter trails
+const BEAM_TRAIL_MAX = 100;
+const BEAM_SPEED_MIN = 3;
+const BEAM_SPEED_MAX = 6;
+const BEAM_SPAWN_RATE = 0.03;  // Much lower spawn rate
+const MAX_BEAMS = 15;  // Much fewer beams
+const TARGET_FPS = 20;  // Reduced from 60fps to 20fps
 
 /* ── Helpers ───────────────────────────────────────────────── */
 const rand = (lo: number, hi: number) => lo + Math.random() * (hi - lo);
@@ -164,8 +165,18 @@ export default function GridCanvas() {
             }
         }
 
-        /* ── frame loop ─────────────────────────────────────── */
-        function frame() {
+        /* ── frame loop (throttled to TARGET_FPS) ────────────── */
+        let lastFrameTime = 0;
+        const frameInterval = 1000 / TARGET_FPS;
+        
+        function frame(currentTime: number) {
+            animId = requestAnimationFrame(frame);
+            
+            // Throttle frame rate
+            const elapsed = currentTime - lastFrameTime;
+            if (elapsed < frameInterval) return;
+            lastFrameTime = currentTime - (elapsed % frameInterval);
+            
             ctx!.clearRect(0, 0, W, H);
             drawGrid();
             spawnBeams();
@@ -178,14 +189,12 @@ export default function GridCanvas() {
                     drawBeam(ctx!, beams[i]);
                 }
             }
-
-            animId = requestAnimationFrame(frame);
         }
 
         /* ── init ───────────────────────────────────────────── */
         resize();
         window.addEventListener('resize', resize);
-        animId = requestAnimationFrame(frame);
+        animId = requestAnimationFrame((t) => frame(t));
 
         return () => {
             window.removeEventListener('resize', resize);

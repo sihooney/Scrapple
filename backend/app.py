@@ -54,8 +54,15 @@ def index():
         "<li>POST /api/voice/listen</li>"
         "<li>POST /api/demo/start</li><li>POST /api/demo/stop</li>"
         "<li>GET /api/arm/next</li>"
-        "<li>GET /api/video/feed — MJPEG stream with YOLO detection</li>"
+        "<li><strong>Video Streams (OpenCV):</strong></li>"
+        "<li>GET /api/video/feed — Live Feed with YOLO detection (camera 2)</li>"
+        "<li>GET /api/video/camera — Camera Feed raw stream (camera 3)</li>"
         "<li>GET /api/detections — Latest detection positions</li>"
+        "<li><strong>LeRobot Integration:</strong></li>"
+        "<li>POST /api/lerobot/start — Start LeRobot recording session</li>"
+        "<li>POST /api/lerobot/stop — Stop LeRobot recording session</li>"
+        "<li>POST /api/lerobot/enter — Send Enter key to LeRobot process</li>"
+        "<li>GET /api/lerobot/status — Get LeRobot session status</li>"
         "</ul>"
     )
 

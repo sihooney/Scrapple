@@ -39,20 +39,20 @@ export default function HudFooter() {
 
     return (
         <footer className="hud-footer" id="hudFooter">
-            <span className="hud-footer__item">
-                SYS{' '}
-                <span className="hud-footer__value hud-footer__value--green">
-                    NOMINAL
-                </span>
+            <span>
+                [SYS] <span className="hud-footer__value--green">OPERATIONAL</span>
             </span>
-            <span className="hud-footer__item">
-                ARM <span className="hud-footer__value">STANDBY</span>
+            <span>
+                [ARM] <span className="hud-footer__value">IDLE</span>
             </span>
-            <span className="hud-footer__item">
-                GRIP <span className="hud-footer__value">0.00 kPa</span>
+            <span>
+                [PWR] <span className="hud-footer__value--green">98.7%</span>
             </span>
-            <span className="hud-footer__item" id="hudClock">
-                {clock}
+            <span>
+                [RAD] <span className="hud-footer__value">0.42 mSv</span>
+            </span>
+            <span style={{ marginLeft: 'auto' }}>
+                [{clock}]
             </span>
         </footer>
     );
