@@ -6,7 +6,8 @@ def main():
     model.train(
         data='dataset/data.yaml',
         epochs=50,
-        imgsz=640
+        imgsz=320,
+        patience=10
     )
 
 if __name__ == '__main__':
