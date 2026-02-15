@@ -1,3 +1,10 @@
+"""
+Scrapple — Centralized Configuration
+=====================================
+Ported from working Gemini-Speech-Salvage-Input settings.
+All tunable constants live here.
+"""
+
 import os
 from dotenv import load_dotenv
 
@@ -6,24 +13,31 @@ load_dotenv()
 class Config:
     # Flask
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev_key_do_not_use_in_prod')
-    
-    # Audio Settings
-    AUDIO_RECORD_SECONDS = 5
-    AUDIO_SAMPLE_RATE = 44100
-    AUDIO_CHANNELS = 1
-    AUDIO_CHUNK_SIZE = 1024
-    
-    # Gemini
+
+    # ── Allowed Object Sets ─────────────────────────────────────────────
+    # "Visible" objects are now the ONLY objects.
+    # Only what is in this list is considered valid for salvage.
+    DEFAULT_VISIBLE_OBJECTS: list[str] = ["heart", "gear", "hot dog", "skull", "nut"]
+
+    # ── Audio Recording ─────────────────────────────────────────────────
+    AUDIO_SAMPLE_RATE: int = 16_000   # 16 kHz – matches Gemini expectations
+    AUDIO_CHANNELS: int = 1           # Mono
+    AUDIO_RECORD_SECONDS: int = 4     # Default listen window (3-5 s range)
+    AUDIO_CHUNK_SIZE: int = 1024      # Frames per PyAudio buffer
+
+    # ── Gemini ──────────────────────────────────────────────────────────
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-    GEMINI_MODEL = "gemini-1.5-flash"
-    GEMINI_MAX_RETRIES = 2
-    GEMINI_RETRY_DELAY = 1.0  # seconds
-    
-    # ElevenLabs
+    GEMINI_MODEL: str = "gemini-2.0-flash"
+    GEMINI_MAX_OUTPUT_TOKENS: int = 128          # Keep responses tiny → faster
+    GEMINI_TEMPERATURE: float = 0.0              # Deterministic
+    GEMINI_RESPONSE_MIME_TYPE: str = "application/json"
+    GEMINI_MAX_RETRIES: int = 3
+    GEMINI_RETRY_DELAY: int = 10                 # Seconds to clear rate limit buckets
+
+    # ── Loop Pacing ─────────────────────────────────────────────────────
+    LOOP_DELAY: int = 3                          # Seconds to wait between loops
+
+    # ── ElevenLabs ──────────────────────────────────────────────────────
     ELEVEN_API_KEY = os.getenv('ELEVEN_API_KEY')
-    ELEVENLABS_VOICE_ID = "21m00Tcm4TlvDq8ikWAM" # Rachel
-    ELEVENLABS_MODEL = "eleven_monolingual_v1"
-    
-    # Vision / Logic
-    # Default fallback if vision service isn't running
-    DEFAULT_VISIBLE_OBJECTS = ["screw", "gear", "heart", "hot dog"]
+    ELEVENLABS_VOICE_ID: str = "JBFqnCBsd6RMkjVDRZzb"   # "George" – deep & cinematic
+    ELEVENLABS_MODEL: str = "eleven_turbo_v2"           # Lowest-latency model
