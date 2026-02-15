@@ -41,3 +41,11 @@ class Config:
     ELEVEN_API_KEY = os.getenv('ELEVEN_API_KEY')
     ELEVENLABS_VOICE_ID: str = "JBFqnCBsd6RMkjVDRZzb"   # "George" – deep & cinematic
     ELEVENLABS_MODEL: str = "eleven_turbo_v2"           # Lowest-latency model
+
+    # ── Computer Vision ─────────────────────────────────────────────────
+    CV_MODEL_PATH: str = "runs/detect/train/weights/best.pt"
+    CV_FALLBACK_MODEL: str = "yolo11n.pt"
+    CV_VIDEO_PATH: str = "dataset/test_video.mov"
+    CV_CONFIDENCE_THRESHOLD: float = 0.5
+    CV_STREAM_FPS: int = 20                             # Target frame rate
+    CV_JPEG_QUALITY: int = 85                           # JPEG compression quality

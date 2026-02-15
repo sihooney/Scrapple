@@ -1,80 +1,623 @@
-/**
- * Scrapple — Global Styles
- * ========================
- * Tailwind CSS base with custom animations & utilities.
- */
-
+/* ============================================================
+   TailwindCSS Directives
+   ============================================================ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Hide scrollbar for Chrome, Safari and Opera */
+/* ============================================================
+   SCRAPPLE — Dashboard HUD Styles
+   ============================================================
+   
+   Z-Index Strategy:
+   -----------------
+   Layer 0 (z-index: 0)  - GridCanvas (animated background)
+   Layer 1 (z-index: 1)  - Main content (panels, video feeds, terminal)
+   Layer 2 (z-index: 2)  - HUD overlays (header, footer)
+   
+   This layering ensures the animated grid stays in the background,
+   content is interactive in the middle, and HUD elements overlay everything.
+   ============================================================ */
+
+/* --- Reset & Base ------------------------------------------ */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #06080d;
+  --cyan: #00e5ff;
+  --cyan-dim: rgba(0, 229, 255, .25);
+  --cyan-glow: rgba(0, 229, 255, .55);
+  --text: rgba(255, 255, 255, .72);
+  --text-dim: rgba(255, 255, 255, .30);
+  --green: #39ff14;
+  --font-display: 'Orbitron', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+
+html,
+body,
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Canvas ----------------------------------------------- */
+.grid-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* --- Camera Feed Rectangle -------------------------------- */
+.camera-feed {
+  position: fixed;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 66.66vw;
+  height: 66.66vh;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 12, 24, .35);
+  border: 1.5px solid var(--cyan-dim);
+  box-shadow:
+    0 0 8px var(--cyan-dim),
+    0 0 24px var(--cyan-dim),
+    0 0 60px rgba(0, 229, 255, .12),
+    inset 0 0 30px rgba(0, 229, 255, .06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- CV Video Stream (YOLO Detection) --------------------- */
+.cv-video-stream {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 12, 24, .35);
+  border: 1.5px solid var(--cyan-dim);
+  box-shadow:
+    0 0 8px var(--cyan-dim),
+    0 0 24px var(--cyan-dim),
+    0 0 60px rgba(0, 229, 255, .12),
+    inset 0 0 30px rgba(0, 229, 255, .06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Scanlines */
+.camera-feed::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 229, 255, 0.015) 2px,
+      rgba(0, 229, 255, 0.015) 4px);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* CV Video Stream Content */
+.cv-video-stream__content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.cv-video-stream__video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* CV Video Stream Error State */
+.cv-video-stream__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.cv-video-stream__error-icon {
+  font-size: 48px;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.cv-video-stream__error-text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+}
+
+.cv-video-stream__error-subtext {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+/* CV Video Stream Scanlines */
+.cv-video-stream__scanlines {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 229, 255, 0.015) 2px,
+      rgba(0, 229, 255, 0.015) 4px);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Corner brackets */
+.camera-feed__corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: var(--cyan);
+  border-style: solid;
+  border-width: 0;
+}
+
+.camera-feed__corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 3px;
+  border-left-width: 3px;
+}
+
+.camera-feed__corner--tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 3px;
+  border-right-width: 3px;
+}
+
+.camera-feed__corner--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 3px;
+  border-left-width: 3px;
+}
+
+.camera-feed__corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 3px;
+  border-right-width: 3px;
+}
+
+/* CV Video Stream Corner brackets */
+.cv-video-stream__corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: var(--cyan);
+  border-style: solid;
+  border-width: 0;
+  z-index: 2;
+}
+
+.cv-video-stream__corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 3px;
+  border-left-width: 3px;
+}
+
+.cv-video-stream__corner--tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 3px;
+  border-right-width: 3px;
+}
+
+.cv-video-stream__corner--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 3px;
+  border-left-width: 3px;
+}
+
+.cv-video-stream__corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 3px;
+  border-right-width: 3px;
+}
+
+/* Crosshair */
+.camera-feed__crosshair {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--cyan-dim);
+  border-radius: 50%;
+  position: relative;
+}
+
+.camera-feed__crosshair::before,
+.camera-feed__crosshair::after {
+  content: '';
+  position: absolute;
+  background: var(--cyan-dim);
+}
+
+.camera-feed__crosshair::before {
+  width: 1px;
+  height: 64px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.camera-feed__crosshair::after {
+  width: 64px;
+  height: 1px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Labels */
+.camera-feed__label {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--cyan);
+  text-shadow: 0 0 6px var(--cyan-glow);
+  opacity: .8;
+}
+
+.camera-feed__label--top {
+  top: 12px;
+}
+
+.camera-feed__label--bottom {
+  bottom: 12px;
+  animation: blink 1.6s steps(1) infinite;
+}
+
+/* CV Video Stream Labels */
+.cv-video-stream__label {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--cyan);
+  text-shadow: 0 0 6px var(--cyan-glow);
+  opacity: .8;
+  z-index: 2;
+}
+
+.cv-video-stream__label--top {
+  top: 12px;
+}
+
+.cv-video-stream__label--bottom {
+  bottom: 12px;
+  animation: blink 1.6s steps(1) infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: .8;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+/* --- HUD Header ------------------------------------------- */
+.hud-header {
+  position: fixed;
+  z-index: 2;
+  top: 18px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hud-header__title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: 8px;
+  color: var(--cyan);
+  text-shadow:
+    0 0 6px var(--cyan-glow),
+    0 0 20px rgba(0, 229, 255, .25);
+}
+
+.hud-header__subtitle {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+}
+
+/* --- HUD Footer ------------------------------------------- */
+.hud-footer {
+  position: fixed;
+  z-index: 2;
+  bottom: 16px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  gap: 32px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+}
+
+.hud-footer__value {
+  color: var(--cyan);
+  text-shadow: 0 0 4px var(--cyan-dim);
+}
+
+.hud-footer__value--green {
+  color: var(--green);
+  text-shadow: 0 0 4px rgba(57, 255, 20, .35);
+}
+
+/* --- App Container & Layout ------------------------------- */
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1rem;
+  padding: 80px 1.5rem 80px 1.5rem;
+  overflow: hidden;
+}
+
+/* --- Left Column ------------------------------------------ */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cyan-dim) transparent;
+}
+
+.left-column::-webkit-scrollbar {
+  width: 6px;
+}
+
+.left-column::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.left-column::-webkit-scrollbar-thumb {
+  background: var(--cyan-dim);
+  border-radius: 3px;
+}
+
+/* --- Right Column ----------------------------------------- */
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.right-column > * {
+  flex-shrink: 0;
+}
+
+.right-column > .camera-feed {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  width: 100%;
+  height: 280px;
+  flex-shrink: 0;
+}
+
+.right-column > .cv-video-stream {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  flex-shrink: 0;
+}
+
+.right-column > .system-log {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* --- Panel Base Styles ------------------------------------ */
+.panel {
+  background: rgba(6, 8, 13, 0.85);
+  border: 1.5px solid var(--cyan-dim);
+  border-radius: 4px;
+  padding: 1.25rem;
+  box-shadow:
+    0 0 8px var(--cyan-dim),
+    0 0 20px rgba(0, 229, 255, 0.08),
+    inset 0 0 20px rgba(0, 229, 255, 0.03);
+  backdrop-filter: blur(8px);
+}
+
+.panel__title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 6px var(--cyan-glow);
+}
+
+.panel__status {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 0.75rem;
+  line-height: 1.4;
+}
+
+/* --- Demo Control Panel ----------------------------------- */
+.demo-control-panel {
+  flex-shrink: 0;
+}
+
+.demo-button {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  border: 2px solid;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.demo-button--idle {
+  color: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.3);
+}
+
+.demo-button--idle:hover {
+  background: rgba(57, 255, 20, 0.1);
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.5);
+  transform: translateY(-1px);
+}
+
+.demo-button--idle:active {
+  transform: translateY(0);
+}
+
+.demo-button--running {
+  color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* --- System Status Panel ---------------------------------- */
+.system-status-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.1);
+  font-size: 12px;
+}
+
+.status-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.status-item__label {
+  color: var(--cyan);
+  letter-spacing: 1px;
+}
+
+.status-item__value {
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--cyan);
+}
+
+.status-item__value--online {
+  color: var(--green);
+  text-shadow: 0 0 4px rgba(57, 255, 20, 0.35);
+}
+
+/* --- VideoDisplay & SystemLog Adjustments ----------------- */
+.right-column > div:not(.camera-feed) {
+  min-height: 0;
+}
+
+/* Ensure VideoDisplay has proper height */
+.right-column > div:nth-child(2) {
+  height: 320px;
+  flex-shrink: 0;
+}
+
+/* SystemLog takes remaining space */
+.right-column > div:nth-child(3) {
+  flex: 1;
+  min-height: 200px;
+}
+
+/* Override Tailwind glow effect to match our theme */
+.glow-cyan {
+  box-shadow:
+    0 0 8px var(--cyan-dim),
+    0 0 20px rgba(0, 229, 255, 0.08),
+    inset 0 0 20px rgba(0, 229, 255, 0.03);
+}
+
+/* Scrollbar styling for consistency */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-/* Custom scrollbar for terminal */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 255, 0.3);
-}
-
-/* Font */
-body {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', Courier, monospace;
-  background-color: #0a0a0f;
-}
-
-/* Glow effects */
-.glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-}
-
-.glow-emerald {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-}
-
-/* Pulse animation for live indicator */
-@keyframes pulse-live {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse-live {
-  animation: pulse-live 1.5s ease-in-out infinite;
-}
-
-/* Button interactions */
-button {
-  transition: all 0.2s ease;
-}
-
-button:hover:not(:disabled) {
-  filter: brightness(1.1);
-}
-
-button:active:not(:disabled) {
-  transform: scale(0.98);
 }

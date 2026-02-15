@@ -37,11 +37,13 @@ from routes.status import register_status_routes
 from routes.voice import register_voice_routes
 from routes.demo import register_demo_routes
 from routes.arm import register_arm_routes
+from routes.video import register_video_routes
 
 register_status_routes(app, global_state)
 register_voice_routes(app, global_state, voice_service)
 register_demo_routes(app, global_state)
 register_arm_routes(app, global_state)
+register_video_routes(app)
 
 
 @app.route('/')
@@ -52,6 +54,7 @@ def index():
         "<li>POST /api/voice/listen</li>"
         "<li>POST /api/demo/start</li><li>POST /api/demo/stop</li>"
         "<li>GET /api/arm/next</li>"
+        "<li>GET /api/video/stream</li>"
         "</ul>"
     )
 

@@ -20,9 +20,46 @@ Scrapple is the front-end and I/O system for the MakeUofT salvage robot demo. It
 
 ## Components
 
-- **Frontend (React + Vite):** RUN ONCE button (calls `POST /api/voice/listen` once per click), SystemLog as live terminal, VoiceControl for alternative one-shot mic input.
-- **Backend (Flask):** Voice I/O (VoiceService: TTS prompt → listen → STT → Gemini → TTS result), global state (`visible_objects` = hardcoded list, `last_decision`, `demo_running`), LeRobot bridge (placeholder that logs; RL team can add real commands).
-- **Config:** `DEFAULT_VISIBLE_OBJECTS` in `backend/config.py` is the single source for the demo object list. No CV pipeline for the demo.
+### Frontend (React + Vite)
+
+**UI Components:**
+- **GridCanvas:** Animated background with jittered grid lines and horizontal scanning beams (z-index: 0)
+- **HudHeader:** Top-left overlay displaying "SCRAPPLE" title and subtitle (z-index: 2)
+- **HudFooter:** Bottom status bar with system metrics and real-time clock (z-index: 2)
+- **CameraFeed:** Static placeholder for future LeRobot camera integration (shows "NO SIGNAL")
+- **VideoDisplay:** Independent live webcam feed using browser's getUserMedia API
+- **SystemLog:** Terminal-style log display showing voice interactions in reverse order (newest first)
+- **Demo Control Panel:** RUN ONCE button that triggers `POST /api/voice/listen` for a single voice command cycle
+
+**Key Features:**
+- Cyberpunk HUD aesthetic with cyan (#00e5ff) color scheme
+- Orbitron font for titles, Share Tech Mono for monospace text
+- 60fps animated grid background
+- Real-time clock updates every second
+- Color-coded logs (user: green, bot: cyan, system: yellow)
+
+**Note on Video Components:**
+- **CameraFeed** is a static placeholder for the future LeRobot arm camera (currently shows "NO SIGNAL")
+- **VideoDisplay** is an independent live webcam feed for demonstration purposes
+- These are two separate components serving different purposes
+
+### Backend (Flask)
+
+**Voice I/O (VoiceService):**
+- TTS prompt → listen → STT → Gemini validation → TTS result
+
+**Global State:**
+- `visible_objects` = hardcoded list from config
+- `last_decision` = most recent Gemini validation result
+- `demo_running` = current demo state
+
+**LeRobot Bridge:**
+- Placeholder that logs pick commands
+- RL team can add real LeRobot control commands
+
+### Config
+
+`DEFAULT_VISIBLE_OBJECTS` in `backend/config.py` is the single source for the demo object list. No CV pipeline for the demo.
 
 ---
 

@@ -1,5 +1,19 @@
 import { useEffect, useRef } from 'react';
 
+/**
+ * GridCanvas Component
+ * 
+ * Animated background layer with jittered grid lines and horizontal scanning beams.
+ * Provides the cyberpunk HUD aesthetic for the dashboard.
+ * 
+ * Features:
+ * - Jittered grid pattern for visual interest
+ * - Animated horizontal scanning beams
+ * - 60fps animation using requestAnimationFrame
+ * - Responsive to window resize
+ * - z-index: 0 (background layer)
+ */
+
 /* ── Tunables ──────────────────────────────────────────────── */
 const GRID_BASE_SPACING = 40;
 const GRID_JITTER = 8;
@@ -96,7 +110,7 @@ export default function GridCanvas() {
         let H = 0;
         let gridLinesY: number[] = [];
         let gridLinesX: number[] = [];
-        let beams: Beam[] = [];
+        const beams: Beam[] = [];
         let animId = 0;
 
         /* ── sizing ─────────────────────────────────────────── */

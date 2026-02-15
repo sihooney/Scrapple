@@ -1,5 +1,18 @@
 import { useEffect, useState } from 'react';
 
+/**
+ * HudFooter Component
+ * 
+ * Bottom status bar displaying system metrics and real-time clock.
+ * Part of the HUD overlay system (z-index: 2).
+ * 
+ * Features:
+ * - Fixed positioning at bottom
+ * - Real-time clock (updates every second)
+ * - System status indicators (SYS, ARM, GRIP)
+ * - Color-coded values (green for NOMINAL, cyan for others)
+ */
+
 function useClock(): string {
     const [time, setTime] = useState(() => formatTime(new Date()));
 
@@ -25,23 +38,20 @@ export default function HudFooter() {
     const clock = useClock();
 
     return (
-        <footer
-            className="bg-gray-950 border-t-2 border-cyan-500/40 px-6 py-3 flex justify-between items-center text-xs font-mono glow-cyan"
-            id="hudFooter"
-        >
-            <span className="text-cyan-300 uppercase">
+        <footer className="hud-footer" id="hudFooter">
+            <span className="hud-footer__item">
                 SYS{' '}
-                <span className="text-emerald-400 font-bold">
+                <span className="hud-footer__value hud-footer__value--green">
                     NOMINAL
                 </span>
             </span>
-            <span className="text-cyan-300 uppercase">
-                ARM <span className="text-cyan-200">STANDBY</span>
+            <span className="hud-footer__item">
+                ARM <span className="hud-footer__value">STANDBY</span>
             </span>
-            <span className="text-cyan-300 uppercase">
-                GRIP <span className="text-cyan-200">0.00 kPa</span>
+            <span className="hud-footer__item">
+                GRIP <span className="hud-footer__value">0.00 kPa</span>
             </span>
-            <span className="text-cyan-200 uppercase font-bold" id="hudClock">
+            <span className="hud-footer__item" id="hudClock">
                 {clock}
             </span>
         </footer>

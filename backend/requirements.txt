@@ -16,5 +16,5 @@ numpy>=1.26.0
 SpeechRecognition>=3.10.0
 
 # Vision (optional, not used in demo)
-# ultralytics
-# opencv-python
+ultralytics
+opencv-python

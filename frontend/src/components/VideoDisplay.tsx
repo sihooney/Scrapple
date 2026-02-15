@@ -3,8 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 /**
  * Scrapple — Video Display Component
  * ==================================
- * Proof-of-concept webcam feed using browser camera.
- * This is a placeholder for future OpenCV-backed streaming.
+ * Independent Webcam Feed - Live
+ * 
+ * This component provides a LIVE browser webcam feed using getUserMedia.
+ * It is completely independent of the CameraFeed placeholder component.
+ * 
+ * NOTE: This is NOT the LeRobot camera feed. This is a separate webcam
+ * for demonstration purposes while the LeRobot camera integration is pending.
  */
 export default function VideoDisplay() {
   const videoRef = useRef<HTMLVideoElement>(null);
