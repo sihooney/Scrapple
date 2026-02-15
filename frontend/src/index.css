@@ -35,6 +35,20 @@ body,
   -webkit-font-smoothing: antialiased;
 }
 
+/* --- Main Column (video + cli stacked) -------------------- */
+.main-column {
+  position: fixed;
+  z-index: 1;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(50vw, 85vh * 16 / 9);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-height: 88vh;
+}
+
 /* --- Canvas ----------------------------------------------- */
 .grid-canvas {
   position: fixed;
@@ -47,13 +61,9 @@ body,
 
 /* --- Camera Feed Rectangle -------------------------------- */
 .camera-feed {
-  position: fixed;
-  z-index: 1;
-  top: 50%;
-  left: 50%;
-  width: 66.66vw;
-  height: 66.66vh;
-  transform: translate(-50%, -50%);
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   background: rgba(0, 12, 24, .35);
   border: 1.5px solid var(--cyan-dim);
   box-shadow:
@@ -65,15 +75,21 @@ body,
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
+  flex-shrink: 0;
+  padding-top: 24px;
+  padding-bottom: 24px;
 }
 
 /* Video stream */
 .camera-feed__stream {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
   object-fit: contain;
   z-index: 1;
 }
@@ -180,11 +196,13 @@ body,
 }
 
 .camera-feed__label--top {
-  top: 12px;
+  top: -22px;
+  z-index: 5;
 }
 
 .camera-feed__label--bottom {
-  bottom: 12px;
+  bottom: -22px;
+  z-index: 5;
   animation: blink 1.6s steps(1) infinite;
 }
 
@@ -360,4 +378,138 @@ body,
 
 .detection-card__btn:active {
   transform: scale(0.97);
+}
+
+/* --- CLI Panel -------------------------------------------- */
+.cli-panel {
+  position: relative;
+  width: 100%;
+  min-height: 120px;
+  flex: 1;
+  background: rgba(4, 8, 16, .85);
+  border: 1.5px solid var(--cyan-dim);
+  border-radius: 8px;
+  box-shadow:
+    0 0 8px var(--cyan-dim),
+    0 0 20px rgba(0, 229, 255, .08),
+    inset 0 0 20px rgba(0, 229, 255, .04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.cli-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(0, 229, 255, .15);
+  flex-shrink: 0;
+}
+
+.cli-panel__title {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--cyan);
+  text-shadow: 0 0 6px var(--cyan-glow);
+}
+
+.cli-panel__voice-btn {
+  padding: 6px 18px;
+  background: transparent;
+  border: 1.5px solid var(--cyan);
+  border-radius: 4px;
+  color: var(--cyan);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all .25s ease;
+  text-shadow: 0 0 4px var(--cyan-dim);
+  box-shadow: 0 0 6px rgba(0, 229, 255, .12);
+}
+
+.cli-panel__voice-btn:hover:not(:disabled) {
+  background: rgba(0, 229, 255, .12);
+  box-shadow: 0 0 14px var(--cyan-dim);
+}
+
+.cli-panel__voice-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.cli-panel__voice-btn--listening {
+  border-color: var(--green);
+  color: var(--green);
+  text-shadow: 0 0 6px rgba(57, 255, 20, .4);
+  box-shadow: 0 0 12px rgba(57, 255, 20, .2);
+  animation: pulse-glow 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(57, 255, 20, .15);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(57, 255, 20, .35);
+  }
+}
+
+.cli-panel__log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 229, 255, .2) transparent;
+}
+
+.cli-panel__log::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cli-panel__log::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, .2);
+  border-radius: 2px;
+}
+
+.cli-panel__entry {
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 1px;
+}
+
+.cli-panel__entry--system {
+  color: var(--text-dim);
+}
+
+.cli-panel__entry--user {
+  color: var(--green);
+}
+
+.cli-panel__entry--bot {
+  color: var(--cyan);
+  text-shadow: 0 0 4px var(--cyan-dim);
+}
+
+.cli-panel__prefix {
+  opacity: .5;
+  margin-right: 6px;
+}
+
+.cli-panel__empty {
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-align: center;
+  padding: 20px;
+  opacity: .5;
 }

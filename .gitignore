@@ -1,0 +1,34 @@
+# ── Python ────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# ── Environment & Secrets ─────────────────
+.env
+.env.*
+
+# ── Node / Frontend ──────────────────────
+node_modules/
+dist/
+.vite/
+
+# ── IDE ───────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Model Weights & Data ─────────────────
+*.pt
+*.onnx
+*.avi
+*.mov
+*.mp4
+dataset/
+
+# ── OS ────────────────────────────────────
+.DS_Store
+Thumbs.db

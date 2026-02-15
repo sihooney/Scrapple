@@ -210,6 +210,105 @@ def detections():
     return jsonify(_get_detections())
 
 
+# ── Voice / STT+TTS Routes ───────────────────────────────────
+
+# Lazy-init so the server starts even without voice deps
+_voice_svc = None
+
+
+def _get_voice_service():
+    global _voice_svc
+    if _voice_svc is None:
+        from voice_service import VoiceService
+        _voice_svc = VoiceService()
+    return _voice_svc
+
+
+@app.route('/api/voice/objects')
+def voice_objects():
+    """Return unique labels from latest detections (for voice prompt)."""
+    dets = _get_detections()
+    labels = sorted(set(d['label'] for d in dets))
+    return jsonify(labels)
+
+
+@app.route('/api/voice/start', methods=['POST'])
+def voice_start():
+    """Step 1: Announce visible objects via TTS and return the prompt text."""
+    try:
+        svc = _get_voice_service()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    dets = _get_detections()
+    visible = sorted(set(d['label'] for d in dets))
+
+    if not visible:
+        return jsonify({"prompt": None, "objects": [], "message": "No objects detected."})
+
+    obj_str = ", ".join(visible)
+    prompt = f"Scanners active. I see {obj_str}. What is the salvage target?"
+
+    # Speak it (blocking — plays audio then returns)
+    try:
+        svc.speak(prompt)
+    except Exception as e:
+        return jsonify({"prompt": prompt, "objects": visible, "tts_error": str(e)})
+
+    return jsonify({"prompt": prompt, "objects": visible})
+
+
+@app.route('/api/voice/record', methods=['POST'])
+def voice_record():
+    """Step 2: Record from mic and transcribe via STT."""
+    from flask import request
+    body = request.get_json(silent=True) or {}
+    duration = body.get('duration', 4)
+
+    try:
+        svc = _get_voice_service()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    command_text = svc.listen(duration)
+    return jsonify({"transcript": command_text or ""})
+
+
+@app.route('/api/voice/evaluate', methods=['POST'])
+def voice_evaluate():
+    """Step 3: Evaluate command with Gemini & speak result."""
+    from flask import request
+    body = request.get_json(silent=True) or {}
+    command_text = body.get('command', '')
+    visible = body.get('objects', [])
+
+    if not command_text:
+        return jsonify({"decision": {"valid": False, "target": None, "reason": "No command."}})
+
+    try:
+        svc = _get_voice_service()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    decision = svc.process_command(command_text, visible)
+
+    valid = decision.get("valid", False)
+    target = decision.get("target")
+    reason = decision.get("reason", "")
+
+    if valid:
+        response_text = f"Confirmed. Locking on to target: {target}."
+    else:
+        response_text = f"Negative. {reason}"
+
+    try:
+        svc.speak(response_text)
+    except Exception:
+        pass
+
+    return jsonify({"decision": decision, "response": response_text})
+
+
 # ── Main ──────────────────────────────────────────────────────
 
 if __name__ == '__main__':
