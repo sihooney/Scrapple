@@ -162,7 +162,7 @@ User Voice → Web Speech API → POST /api/voice/evaluate → Gemini Validation
 
 ### 4. Full-Stack Implementation
 
-- **Backend**: Flask REST API with 15+ endpoints, modular service architecture
+- **Backend**: Flask REST API with modular service architecture
 - **Frontend**: React 19 + TypeScript with Web Speech API integration
 - **Styling**: Tailwind CSS + custom cyberpunk theme (neon glows, animated backgrounds)
 - **State Management**: Real-time polling (5s intervals), event-driven updates
@@ -455,7 +455,7 @@ Hover Cards with [ACQUIRE] buttons → Manual pick trigger
    - Capture: joint positions + camera frames + actions
    
 2. **Imitation Learning**: Policy training
-   - Model: ACT (Action Chunking Transformer) or Diffusion Policy
+   - Model: ACT (Action Chunking Transformer)
    - Input: Camera images + proprioceptive state
    - Output: Joint position commands
    - Training: Google Colab GPU (race against timeout)
