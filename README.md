@@ -124,7 +124,7 @@ User Voice → Web Speech API → POST /api/voice/evaluate → Gemini Validation
 - **Imitation Learning Pipeline**: Trained on Google Colab using human demonstrations
 - **Policy Model**: ACT (Action Chunking Transformer) for smooth trajectory generation
 - **Real-Time Inference**: Closed-loop control with camera feedback
-- **Dataset**: 50+ demonstration episodes stored on HuggingFace (`jakkii/eval_scrapple`)
+- **Dataset**: 80+ demonstration episodes stored on HuggingFace
 - **Intelligent Camera Management**: Dynamic pause/resume system prevents hardware conflicts
 
 **Key Innovation**: Hybrid communication system (stdin + file triggers) enables both direct subprocess control and external process coordination, allowing seamless integration with the CV pipeline.
