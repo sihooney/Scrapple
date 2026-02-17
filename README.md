@@ -257,7 +257,7 @@ Hover Cards with [ACQUIRE] buttons → Manual pick trigger
 
 ---
 
-## 🔧 Backend Architecture (Flask + Python)
+## 🔧 Backend Architecture
 
 ### Core Services
 
@@ -346,42 +346,6 @@ Hover Cards with [ACQUIRE] buttons → Manual pick trigger
   - Running status polling
 
 **Key Innovation**: Hybrid communication system (stdin + file triggers) allows both direct control and external process coordination.
-
-
-### Configuration (`backend/config.py`)
-**Centralized environment-based configuration**
-
-```python
-# Object Detection
-DEFAULT_VISIBLE_OBJECTS = ["hotdog", "skull", "nut", "gear", "heart"]
-
-# Audio
-AUDIO_SAMPLE_RATE = 16000  # Hz
-AUDIO_RECORD_SECONDS = 5   # Listen window
-
-# Gemini
-GEMINI_MODEL = "gemini-2.0-flash"
-GEMINI_TEMPERATURE = 0.0
-GEMINI_MAX_RETRIES = 3
-
-# ElevenLabs
-ELEVENLABS_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"  # "George"
-ELEVENLABS_MODEL = "eleven_turbo_v2"
-
-# Computer Vision
-CV_MODEL_PATH = "runs/detect/train/weights/best.pt"
-CV_CONFIDENCE_THRESHOLD = 0.5
-CV_STREAM_FPS = 20
-CV_LIVE_FEED_CAMERA = 2
-CV_CAMERA_FEED_INDEX = 3
-
-# LeRobot
-LEROBOT_ROBOT_TYPE = "so101_follower"
-LEROBOT_ROBOT_PORT = "COM24"
-LEROBOT_CAMERAS_CONFIG = "{ handeye: {type: opencv, index_or_path: 3, ...}, front: {...} }"
-LEROBOT_REPO_ID = "jakkii/eval_scrapple"
-LEROBOT_POLICY_PATH = "outputs/train/scrapple_model_4"
-```
 
 ---
 
@@ -686,7 +650,6 @@ User hovers → Show card with [ACQUIRE] button
 Click [ACQUIRE] → POST /api/lerobot/run
 ```
 
-
 ---
 
 ## 🎮 Usage
@@ -700,10 +663,10 @@ Click [ACQUIRE] → POST /api/lerobot/run
 5. If valid, LeRobot autonomously picks the object
 
 **Supported Commands**:
-- `"pick the [object]"` — Standard syntax
+- `"[object]"` — Direct command
 - `"grab [object]"` — Casual syntax
 - `"I want the [object]"` — Natural language
-- `"that one"` — Picks first visible object
+- After speech recognition commands, Gemini process natural language commands, allowing for no specific commands to be required
 
 ### Visual Selection Mode
 
@@ -717,68 +680,6 @@ Click [ACQUIRE] → POST /api/lerobot/run
 - **Terminate Process**: Force kill LeRobot and reset UI
 - **Pause/Resume Video**: Manual camera control via API
 - **System Log**: Real-time event monitoring
-
----
-
-## 🧪 Testing
-
-### Voice Pipeline
-```python
-from services.voice_service import VoiceService
-vs = VoiceService()
-
-# Test Gemini validation
-decision = vs.process_command("pick the skull", ["hotdog", "skull", "nut"])
-assert decision["valid"] == True
-assert decision["target"] == "skull"
-
-# Test lenient parsing
-decision = vs.process_command("grab that", ["nut"])
-assert decision["valid"] == True
-assert decision["target"] == "nut"
-```
-
-### CV Pipeline
-```python
-from services.cv_video_service import cv_video_service
-
-# Test detection
-detections = cv_video_service.get_detections()
-assert len(detections) > 0
-assert all(0 <= d["cx"] <= 1 for d in detections)
-assert all(0 <= d["confidence"] <= 1 for d in detections)
-
-# Test pause/resume
-cv_video_service.pause()
-assert cv_video_service.is_paused() == True
-cv_video_service.resume()
-assert cv_video_service.is_paused() == False
-```
-
-### API Endpoints
-```bash
-# Test voice evaluation
-curl -X POST http://localhost:5000/api/voice/evaluate \
-  -H "Content-Type: application/json" \
-  -d '{"command": "pick the skull"}'
-
-# Test LeRobot status
-curl http://localhost:5000/api/lerobot/status
-
-# Test detections
-curl http://localhost:5000/api/detections
-```
-
-### LeRobot Integration
-```python
-# Mock robot for testing
-class MockRobot:
-    def pick_object(self, target):
-        print(f"MOCK: Picking {target}")
-        return {"success": True}
-
-# Replace in lerobot_bridge.py for testing without hardware
-```
 
 ---
 
@@ -850,70 +751,6 @@ class MockRobot:
 - **Web Speech Unsupported**: Show error message, disable voice control
 - **API Timeout**: Show error in log, allow retry
 
-
----
-
-## 🚀 Deployment Guide
-
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- 2x USB webcams (OpenCV-compatible)
-- SO-101 Follower Arm (optional, for full functionality)
-- Google Gemini API key
-- ElevenLabs API key
-
-### Backend Setup
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Create .env file
-echo "GEMINI_API_KEY=your_gemini_key_here" > .env
-echo "ELEVEN_API_KEY=your_elevenlabs_key_here" >> .env
-
-# Run server
-python app.py  # Starts on http://localhost:5000
-```
-
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev  # Starts on http://localhost:5173
-```
-
-### LeRobot Setup (Optional)
-```bash
-# Install LeRobot
-pip install lerobot
-
-# Configure robot
-# Edit backend/config.py:
-# - LEROBOT_ROBOT_PORT (your serial port)
-# - LEROBOT_CAMERAS_CONFIG (your camera indices)
-
-# Train policy (Google Colab recommended)
-# 1. Collect demonstrations: python -m lerobot.record ...
-# 2. Upload to HuggingFace dataset
-# 3. Train in Colab with GPU
-# 4. Download weights to outputs/train/scrapple_model_4
-```
-
-### Production Deployment
-```bash
-# Backend (Gunicorn)
-cd backend
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-
-# Frontend (Build + Serve)
-cd frontend
-npm run build
-# Serve dist/ with nginx or static file server
-```
-
 ---
 
 ## 🛠️ Technology Stack Summary
@@ -945,9 +782,7 @@ npm run build
 
 ### Infrastructure
 - **Training**: Google Colab (GPU)
-- **Dataset**: HuggingFace (`jakkii/eval_scrapple`)
-- **Model Storage**: Local filesystem
-- **Deployment**: Local network (development)
+- **Dataset**: 80+ episodes of manual training
 
 ---
 
